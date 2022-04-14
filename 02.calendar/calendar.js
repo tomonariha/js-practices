@@ -1,32 +1,35 @@
-const argv = require('minimist')(process.argv.slice(2));
+const generateYear = (argv, today) => {
+  if (Object.prototype.hasOwnProperty.call(argv, 'y')) return argv.y
+  else return today.getFullYear()
+}
+const generateMonth = (argv, today) => {
+  if (Object.prototype.hasOwnProperty.call(argv, 'm')) return argv.m
+  else return today.getMonth()
+}
+const generateLastday = (day, month) => {
+  day.setMonth(month)
+  day.setDate(0)
+  return day.getDate()
+}
+const argv = require('minimist')(process.argv.slice(2))
 const today = new Date()
-if (argv.hasOwnProperty('y'))
-  year = argv.y;
-else
-  year = today.getFullYear();
-
-if (argv.hasOwnProperty('m'))
-  month = argv.m;
-else 
-  month = today.getMonth() + 1;
-
-const day = new Date(parseInt(year), parseInt(month));
-day.setDate(1)
-const wday = day.getDay();
-day.setMonth(month);
-day.setDate(0);
-const last_day = day.getDate();
-process.stdout.write('      ' + month + '月 ' + year + '\n')
+const year = generateYear(argv, today)
+const month = generateMonth(argv, today)
+const firstday = new Date(parseInt(year), parseInt(month), 1)
+const lastday = generateLastday(firstday, month)
+const wday = firstday.getDay()
+console.log(firstday)
+process.stdout.write('      ' + (month + 1) + '月 ' + year + '\n')
 process.stdout.write(' 日 月 火 水 木 金 土' + '\n')
-for (let number = 0; number <= wday; number++) {
+for (let number = 0; number < (wday + 1) % 7; number++) {
   process.stdout.write('   ')
 }
-for (let days = 1; days <= last_day; days++ ) {
+for (let days = 1; days <= lastday; days++) {
   if (days < 10) {
     process.stdout.write(' ')
   }
-  process.stdout.write( String(days) + ' ');
-  if ((days + wday) % 7 == 6) {
+  process.stdout.write(String(days) + ' ')
+  if ((days + wday) % 7 === 6) {
     process.stdout.write('\n')
   }
 }
