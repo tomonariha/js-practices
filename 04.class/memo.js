@@ -1,98 +1,105 @@
 const fs = require('fs')
 const readline = require('readline')
 const Enquirer = require('enquirer')
-const args = process.argv
-const readInterface = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout
-})
 
-const loadMemos = () => {
-  const memos = fs.readFileSync('file.json', 'utf8')
-  return JSON.parse(memos)
+class FileAccessor {
+  static load = () => {
+    const files = fs.readFileSync('file.json', 'utf8')
+    return JSON.parse(files)
+  }
+
+  static save (memos) {
+    const files = JSON.stringify(memos)
+    fs.writeFileSync('file.json', files)
+  }
 }
 
-const create = () => {
-  process.stdin.resume()
-  process.stdin.setEncoding('utf8')
-  const texts = loadMemos()
-  const lines = []
-  readInterface.on('line', (line) => {
-    lines.push(line)
-  })
-  readInterface.on('close', () => {
-    readInterface.close()
-    const memo = {'title': lines[0],'body': lines}
-    if (texts.some(text => text.title === memo.title)) {
-      console.log('Title:\'' + lines[0] + '\' is already exists')
-      process.exit()
-    } else {
-      texts.push(memo)
+class Memos {
+  constructor (memos) {
+    this.memos = memos
+  }
+
+  index () {
+    for (const memo of this.memos) {
+      console.log(memo.title)
     }
-    const txt = JSON.stringify(texts)
-    fs.writeFileSync('file.json', txt)
     process.exit()
-  })
-}
-
-const index = () => {
-  const texts = loadMemos()
-  for (const text of texts) {
-    console.log(text.title)
   }
-  process.exit()
-}
 
-const show = () => {
-  const memos = loadMemos()
-  const text = []
-  for (const memo of memos) {
-    text.push(memo.title)
+  create () {
+    const readInterface = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    })
+    process.stdin.resume()
+    process.stdin.setEncoding('utf8')
+    const lines = []
+    readInterface.on('line', (line) => {
+      lines.push(line)
+    })
+    readInterface.on('close', () => {
+      readInterface.close()
+      const newMemo = { title: lines[0], body: lines }
+      if (this.memos.some(memo => memo.title === newMemo.title)) {
+        console.log('Title:\'' + lines[0] + '\' is already exists')
+        process.exit()
+      } else {
+        this.memos.push(newMemo)
+        FileAccessor.save(this.memos)
+        console.log('Title:\'' + newMemo.title + '\' was created')
+      }
+    })
   }
-  (async () => {
+
+  chooseTitle (action) {
+    if (this.memos.length === 0) {
+      console.log('Have no memos')
+      process.exit()
+    }
+    const titles = []
+    for (const memo of this.memos) {
+      titles.push(memo.title)
+    }
     const question = {
       type: 'select',
       name: 'title',
-      message: 'Choose a note you want to see:',
-      choices: text
+      message: 'Choose a note you want to ' + action,
+      choices: titles
     }
-    const answer = await Enquirer.prompt(question)
-    const filtered = memos.filter(memo => memo.title === `${answer.title}`)
-    const memoAll = filtered[0].body
+    return Enquirer.prompt(question)
+  }
+
+  async show () {
+    const action = 'see:'
+    const answer = await this.chooseTitle(action)
+    const chosenMemo = this.memos.filter(memo => memo.title === answer.title)
+    const memoAll = chosenMemo[0].body
     for (const memo of memoAll) {
       console.log(memo)
     }
-  })()
+  }
+
+  async destroy () {
+    const action = 'delete:'
+    const answer = await this.chooseTitle(action)
+    const filteredMemos = this.memos.filter(memo => memo.title !== answer.title)
+    FileAccessor.save(filteredMemos)
+    console.log('Title:\'' + answer.title + '\' was deleted')
+  }
 }
 
-const destroy = () => {
-  const memos = loadMemos()
-  const text = []
-  for (const memo of memos) {
-    text.push(memo.title)
-  }
-  (async () => {
-    const question = {
-      type: 'select',
-      name: 'memo',
-      message: 'Choose a note you want to delete:',
-      choices: text
-    }
-    const answer = await Enquirer.prompt(question)
-    const filteredMemos = memos.filter(memo => memo.title !== `${answer.memo}`)
-    const txt = JSON.stringify(filteredMemos)
-    fs.writeFileSync('file.json', txt)
-  })()
-}
+const files = FileAccessor.load()
+const memos = new Memos(files)
+const args = process.argv
 if (args.length > 3) {
   console.log('Options are too much. Specify only one option.')
   process.exit()
 } else if (args.includes('-d')) {
-  destroy()
+  memos.destroy()
 } else if (args.includes('-l')) {
-  index()
+  memos.index()
 } else if (args.includes('-r')) {
-  show()
+  memos.show()
 } else {
-  create()
+  memos.create()
 }
