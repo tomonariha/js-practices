@@ -3,7 +3,7 @@ const readline = require('readline')
 const Enquirer = require('enquirer')
 
 class FileAccessor {
-  static load = () => {
+  static load () {
     const files = fs.readFileSync('file.json', 'utf8')
     return JSON.parse(files)
   }
@@ -73,9 +73,9 @@ class Memos {
     const action = 'see:'
     const answer = await this.#chooseTitle(action)
     const chosenMemo = this.memos.filter(memo => memo.title === answer.title)
-    const memoAll = chosenMemo[0].body
-    for (const memo of memoAll) {
-      console.log(memo)
+    const texts = chosenMemo[0].body
+    for (const text of texts) {
+      console.log(text)
     }
   }
 
