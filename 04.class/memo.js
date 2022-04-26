@@ -51,7 +51,7 @@ class Memos {
     })
   }
 
-  chooseTitle (action) {
+  #chooseTitle (action) {
     if (this.memos.length === 0) {
       console.log('Have no memos')
       process.exit()
@@ -71,7 +71,7 @@ class Memos {
 
   async show () {
     const action = 'see:'
-    const answer = await this.chooseTitle(action)
+    const answer = await this.#chooseTitle(action)
     const chosenMemo = this.memos.filter(memo => memo.title === answer.title)
     const memoAll = chosenMemo[0].body
     for (const memo of memoAll) {
@@ -81,7 +81,7 @@ class Memos {
 
   async destroy () {
     const action = 'delete:'
-    const answer = await this.chooseTitle(action)
+    const answer = await this.#chooseTitle(action)
     const filteredMemos = this.memos.filter(memo => memo.title !== answer.title)
     FileAccessor.save(filteredMemos)
     console.log('Title:\'' + answer.title + '\' was deleted')
