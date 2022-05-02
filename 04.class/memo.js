@@ -41,12 +41,12 @@ class Memos {
       readInterface.close()
       const newMemo = { title: lines[0], body: lines }
       if (this.memos.some(memo => memo.title === newMemo.title)) {
-        console.log('Title:\'' + lines[0] + '\' is already exists')
+        console.log(`Title:'${lines[0]}' is already exists`)
         process.exit()
       } else {
         this.memos.push(newMemo)
         FileAccessor.save(this.memos)
-        console.log('Title:\'' + newMemo.title + '\' was created')
+        console.log(`Title:'${newMemo.title}' was created`)
       }
     })
   }
@@ -63,14 +63,14 @@ class Memos {
     const question = {
       type: 'select',
       name: 'title',
-      message: 'Choose a note you want to ' + action,
+      message: `Choose a note you want to ${action}:`,
       choices: titles
     }
     return Enquirer.prompt(question)
   }
 
   async show () {
-    const action = 'see:'
+    const action = 'see'
     const answer = await this.#chooseTitle(action)
     const chosenMemo = this.memos.filter(memo => memo.title === answer.title)
     const texts = chosenMemo[0].body
@@ -80,11 +80,11 @@ class Memos {
   }
 
   async destroy () {
-    const action = 'delete:'
+    const action = 'delete'
     const answer = await this.#chooseTitle(action)
     const filteredMemos = this.memos.filter(memo => memo.title !== answer.title)
     FileAccessor.save(filteredMemos)
-    console.log('Title:\'' + answer.title + '\' was deleted')
+    console.log(`Title:'${answer.title}' was deleted`)
   }
 }
 
